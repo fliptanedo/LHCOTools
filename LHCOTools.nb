@@ -1,0 +1,509 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 8.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       157,          7]
+NotebookDataLength[     19191,        500]
+NotebookOptionsPosition[     18789,        481]
+NotebookOutlinePosition[     19146,        497]
+CellTagsIndexPosition[     19103,        494]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["Flip\[CloseCurlyQuote]s LHCO tools", "Title",
+ CellChangeTimes->{{3.561234290745143*^9, 3.561234301349555*^9}, {
+   3.561290426432086*^9, 3.561290428759398*^9}, 3.561290591693862*^9}],
+
+Cell[TextData[{
+ "Flip Tanedo (pt267@cornell.edu)\n6 November 2012\n\nBased on the Harvard ",
+ StyleBox["Chameleon",
+  FontSlant->"Italic"],
+ " notebook and the Cornell ",
+ StyleBox["MadEvent Analysis",
+  FontSlant->"Italic"],
+ " notebook. \n",
+ StyleBox["What it does",
+  FontWeight->"Bold"],
+ ": takes the output LHCO file from the MG5/Pythia-PGS pipeline and provides \
+tools for basic data analysis.\n\n",
+ StyleBox["How it works:",
+  FontWeight->"Bold"],
+ " run this notebook. In a ",
+ StyleBox["separate",
+  FontSlant->"Italic"],
+ " notebook, do your analysis."
+}], "Text",
+ CellChangeTimes->{{3.561234303557105*^9, 3.561234317829179*^9}, {
+  3.561290088613472*^9, 3.5612901266663027`*^9}, {3.561290595566578*^9, 
+  3.5612906058120317`*^9}, {3.561290671900968*^9, 3.561290760403573*^9}, {
+  3.561306061871479*^9, 3.561306083593239*^9}}],
+
+Cell[BoxData[""], "Input",
+ CellChangeTimes->{{3.5612909021526546`*^9, 3.56129090268219*^9}}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(*", " ", 
+   RowBox[{"Input", ":", " ", 
+    RowBox[{"lhco", " ", "file", " ", "from", " ", "PGS"}]}], " ", "*)"}], 
+  "\[IndentingNewLine]", 
+  RowBox[{"(*", " ", 
+   RowBox[{
+    RowBox[{"Output", ":", " ", 
+     RowBox[{"list", " ", "of", " ", "row", " ", "data"}]}], ",", " ", 
+    RowBox[{"not", " ", "yet", " ", "processed", " ", "by", " ", "event"}]}], 
+   " ", "*)"}], "\[IndentingNewLine]", 
+  RowBox[{"(*", " ", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"USAGE", ":", " ", "eventList"}], " ", "=", " ", 
+     RowBox[{"ReadLHCO", "[", 
+      RowBox[{"Import", "[", 
+       RowBox[{"\"\<FILENAME.lhco\>\"", ",", "\"\<Table\>\""}], "]"}], 
+      "]"}]}], ";"}], " ", "*)"}], "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{
+    RowBox[{
+     RowBox[{"ReadLHCO", "[", "rawInput_", " ", "]"}], " ", ":=", " ", 
+     "\[IndentingNewLine]", 
+     RowBox[{"(", "\[IndentingNewLine]", 
+      RowBox[{"(*", " ", 
+       RowBox[{"Define", " ", "the", " ", "column", " ", "title"}], " ", 
+       "*)"}], "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"columnTitle", "=", 
+        RowBox[{"{", 
+         RowBox[{
+         "\"\<#\>\"", ",", "\"\<typ\>\"", ",", "\"\<eta\>\"", ",", 
+          "\"\<phi\>\"", ",", "\"\<pt\>\"", ",", "\"\<jmas\>\"", ",", 
+          "\"\<ntrk\>\"", ",", "\"\<btag\>\"", ",", "\"\<had/em\>\"", ",", 
+          "\"\<dum1\>\"", ",", "\"\<dum2\>\""}], "}"}]}], ";", 
+       "\[IndentingNewLine]", "\[IndentingNewLine]", 
+       RowBox[{"(*", " ", 
+        RowBox[{
+        "Define", " ", "position", " ", "of", " ", "column", " ", "titles"}], 
+        " ", "*)"}], "\[IndentingNewLine]", 
+       RowBox[{"pos", "=", 
+        RowBox[{
+         RowBox[{"Position", "[", 
+          RowBox[{"rawInput", ",", "columnTitle"}], "]"}], "[", 
+         RowBox[{"[", 
+          RowBox[{"1", ",", "1"}], "]"}], "]"}]}], ";", " ", 
+       "\[IndentingNewLine]", "\[IndentingNewLine]", 
+       RowBox[{"(*", " ", 
+        RowBox[{"Delete", " ", "headers", " ", "using", " ", 
+         RowBox[{"the", " ", "'"}], 
+         RowBox[{"drop", "'"}], " ", "command"}], " ", "*)"}], 
+       "\[IndentingNewLine]", 
+       RowBox[{"noheader", "=", 
+        RowBox[{"Drop", "[", 
+         RowBox[{"rawInput", ",", "pos"}], "]"}]}], ";", 
+       "\[IndentingNewLine]", "\[IndentingNewLine]", 
+       RowBox[{"(*", " ", 
+        RowBox[{
+         RowBox[{"Split", " ", "by", " ", "event"}], ",", " ", 
+         RowBox[{
+         "use", " ", "length", " ", "of", " ", "each", " ", "line", " ", "to",
+           " ", "demarcate", " ", "each", " ", "event"}]}], " ", "*)"}], 
+       "\[IndentingNewLine]", 
+       RowBox[{"(*", " ", 
+        RowBox[{
+        "This", " ", "works", " ", "because", " ", "the", " ", "events", " ", 
+         "are", " ", "labelled", " ", "by", " ", 
+         RowBox[{"a", " ", "'"}], 
+         RowBox[{"trigger", "'"}], " ", "line", " ", "of", " ", "length", " ",
+          "3"}], " ", "*)"}], "\[IndentingNewLine]", 
+       RowBox[{"byevent", "=", 
+        RowBox[{"SplitBy", "[", 
+         RowBox[{"noheader", ",", "Length"}], "]"}]}], ";", 
+       "\[IndentingNewLine]", "\[IndentingNewLine]", 
+       RowBox[{"(*", " ", 
+        RowBox[{"Remove", " ", "trigger", " ", "lines"}], " ", "*)"}], 
+       "\[IndentingNewLine]", 
+       RowBox[{"(*", " ", 
+        RowBox[{"These", " ", "spoil", " ", "the", " ", "list"}], " ", "*)"}],
+        "\[IndentingNewLine]", 
+       RowBox[{"DeleteCases", "[", 
+        RowBox[{"byevent", ",", 
+         RowBox[{"{", 
+          RowBox[{"{", 
+           RowBox[{"0", ",", "_", ",", "_"}], "}"}], "}"}]}], "]"}]}], 
+      "\[IndentingNewLine]", ")"}]}], ";"}], "\[IndentingNewLine]", 
+   "\[IndentingNewLine]", "\[IndentingNewLine]", 
+   RowBox[{"(*", " ", 
+    RowBox[{"PARTICLE", " ", "LIST"}], " ", "*)"}], "\[IndentingNewLine]", 
+   RowBox[{"(*", " ", 
+    RowBox[{"For", " ", "Event", " ", "Print"}], " ", "*)"}], 
+   "\[IndentingNewLine]", "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"particle", "[", "0", "]"}], " ", "=", " ", "\"\<\[Gamma]\>\""}],
+     ";"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"particle", "[", "1", "]"}], " ", "=", " ", "\"\<e\>\""}], ";"}],
+    "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"particle", "[", "2", "]"}], " ", "=", " ", "\"\<\[Mu]\>\""}], 
+    ";"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"particle", "[", "3", "]"}], " ", "=", " ", 
+     "\"\<\!\(\*SubscriptBox[\(tau\), \(had\)]\)\>\""}], ";"}], 
+   "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"particle", "[", "4", "]"}], " ", "=", " ", "\"\<jet\>\""}], 
+    ";"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"particle", "[", "6", "]"}], " ", "=", " ", "\"\<MET\>\""}], 
+    ";"}], "\[IndentingNewLine]", "\[IndentingNewLine]", 
+   RowBox[{"(*", " ", 
+    RowBox[{"PRINT", " ", "EVENT"}], " ", "*)"}], "\[IndentingNewLine]", 
+   RowBox[{"(*", " ", 
+    RowBox[{"Input", ":", " ", 
+     RowBox[{"an", " ", "event", " ", 
+      RowBox[{"(", 
+       RowBox[{
+        RowBox[{"list", " ", "of", " ", "n"}], "-", 
+        RowBox[{"tuples", " ", "ending", " ", "with", " ", "MET"}]}], 
+       ")"}]}]}], " ", "*)"}], "\[IndentingNewLine]", 
+   RowBox[{"(*", " ", 
+    RowBox[{"Output", ":", " ", 
+     RowBox[{"human", "-", 
+      RowBox[{
+      "readable", " ", "output", " ", "of", " ", "the", " ", "event", " ", 
+       "data"}]}]}], " ", "*)"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"EventPrint", "[", " ", "event_", " ", "]"}], " ", ":=", " ", 
+     RowBox[{"(", " ", 
+      RowBox[{"Print", "[", 
+       RowBox[{
+        RowBox[{"Join", "[", 
+         RowBox[{
+          RowBox[{"{", 
+           RowBox[{"{", 
+            RowBox[{
+            "\"\<#\>\"", ",", "\"\<Type\>\"", ",", " ", "\"\<\[Eta]\>\"", ",",
+              " ", "\"\<\[Phi]\>\"", ",", " ", 
+             "\"\<\!\(\*SubscriptBox[\(p\), \(T\)]\)\>\"", ",", " ", 
+             "\"\<jet mass\>\"", ",", " ", "\"\<ntrack\>\"", ",", " ", 
+             "\"\<btag\>\"", ",", " ", "\"\<had/em\>\"", ",", " ", 
+             "\"\<dummy\>\"", ",", " ", "\"\<dummy\>\""}], "}"}], "}"}], ",", 
+          " ", 
+          RowBox[{"event", "/.", 
+           RowBox[{
+            RowBox[{"{", 
+             RowBox[{
+             "x1_", ",", "x2_", ",", "x3_", ",", "x4_", ",", "x5_", ",", 
+              "x6_", ",", "x7_", ",", "x8_", ",", "x9_", ",", "x10_", ",", 
+              "x11_"}], "}"}], "->", 
+            RowBox[{"{", 
+             RowBox[{"x1", ",", 
+              RowBox[{"particle", "[", "x2", "]"}], ",", "x3", ",", "x4", ",",
+               "x5", ",", "x6", ",", "x7", ",", "x8", ",", "x9", ",", "x10", 
+              ",", "x11"}], "}"}]}]}]}], "]"}], "//", "MatrixForm"}], "]"}], 
+      ")"}]}], ";"}], " ", "\[IndentingNewLine]", "\[IndentingNewLine]", 
+   RowBox[{"(*", " ", 
+    RowBox[{"Get", " ", "MET"}], " ", "*)"}], "\[IndentingNewLine]", 
+   RowBox[{"(*", " ", 
+    RowBox[{"Input", ":", " ", 
+     RowBox[{"an", " ", "event", " ", 
+      RowBox[{"(", 
+       RowBox[{
+        RowBox[{"list", " ", "of", " ", "n"}], "-", 
+        RowBox[{"tuples", " ", "ending", " ", "with", " ", "MET"}]}], 
+       ")"}]}]}], " ", "*)"}], "\[IndentingNewLine]", 
+   RowBox[{"(*", " ", 
+    RowBox[{"Output", ":", " ", 
+     RowBox[{
+     "the", " ", "scalar", " ", "MET", " ", "for", " ", "the", " ", 
+      "event"}]}], " ", "*)"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"MET", "[", "event_", "]"}], " ", ":=", 
+     RowBox[{
+      RowBox[{"event", "[", 
+       RowBox[{"[", 
+        RowBox[{"Length", "[", "event", "]"}], "]"}], "]"}], "[", 
+      RowBox[{"[", "5", "]"}], "]"}]}], ";"}], "\[IndentingNewLine]", 
+   "\[IndentingNewLine]", 
+   RowBox[{"(*", " ", 
+    RowBox[{"Get", " ", "list", " ", "of", " ", "leptons"}], " ", "*)"}], 
+   "\[IndentingNewLine]", 
+   RowBox[{"(*", " ", 
+    RowBox[{"Input", ":", " ", 
+     RowBox[{"an", " ", "event", " ", 
+      RowBox[{"(", 
+       RowBox[{
+        RowBox[{"list", " ", "of", " ", "n"}], "-", 
+        RowBox[{"tuples", " ", "ending", " ", "with", " ", "MET"}]}], 
+       ")"}]}]}], " ", "*)"}], "\[IndentingNewLine]", 
+   RowBox[{"(*", " ", 
+    RowBox[{"Output", ":", " ", 
+     RowBox[{
+      RowBox[{"an", " ", "'"}], 
+      RowBox[{"event", "'"}], " ", "containing", " ", "only", " ", 
+      "leptons"}]}], " ", "*)"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"LeptonList", "[", "event_", "]"}], " ", ":=", " ", 
+     RowBox[{"(", "\[IndentingNewLine]", 
+      RowBox[{"DeleteCases", "[", 
+       RowBox[{"event", ",", 
+        RowBox[{"Except", "[", "\[IndentingNewLine]", 
+         RowBox[{
+          RowBox[{"{", 
+           RowBox[{
+           "_", ",", "2", ",", "_", ",", "_", ",", "_", ",", "_", ",", "_", 
+            ",", "_", ",", "_", ",", "_", ",", "_"}], "}"}], "|", " ", 
+          RowBox[{"{", 
+           RowBox[{
+           "_", ",", "1", ",", "_", ",", "_", ",", "_", ",", "_", ",", "_", 
+            ",", "_", ",", "_", ",", "_", ",", "_"}], "}"}]}], "]"}]}], "]"}],
+       "\[IndentingNewLine]", ")"}]}], ";"}], "\[IndentingNewLine]", 
+   "\[IndentingNewLine]", 
+   RowBox[{"(*", " ", 
+    RowBox[{"Number", " ", "of", " ", "leptons"}], " ", "*)"}], 
+   "\[IndentingNewLine]", 
+   RowBox[{"(*", " ", 
+    RowBox[{"Input", ":", " ", 
+     RowBox[{"an", " ", "event", " ", 
+      RowBox[{"(", 
+       RowBox[{
+        RowBox[{"list", " ", "of", " ", "n"}], "-", 
+        RowBox[{"tuples", " ", "ending", " ", "with", " ", "MET"}]}], 
+       ")"}]}]}], " ", "*)"}], "\[IndentingNewLine]", 
+   RowBox[{"(*", " ", 
+    RowBox[{"Output", ":", " ", 
+     RowBox[{
+     "number", " ", "of", " ", "leptons", " ", "in", " ", "the", " ", 
+      "event"}]}], " ", "*)"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"NLeptons", "[", "event_", "]"}], ":=", 
+     RowBox[{"(", "\[IndentingNewLine]", 
+      RowBox[{"Length", "[", 
+       RowBox[{"LeptonList", "[", "event", "]"}], "]"}], 
+      "\[IndentingNewLine]", ")"}]}], ";"}], "\[IndentingNewLine]", 
+   "\[IndentingNewLine]", 
+   RowBox[{"(*", " ", 
+    RowBox[{"Sort", " ", "by", " ", "Pt"}], " ", "*)"}], 
+   "\[IndentingNewLine]", 
+   RowBox[{"(*", " ", 
+    RowBox[{"Input", ":", " ", 
+     RowBox[{"an", " ", "event", " ", 
+      RowBox[{"(", 
+       RowBox[{
+        RowBox[{"list", " ", "of", " ", "n"}], "-", 
+        RowBox[{"tuples", " ", "ending", " ", "with", " ", "MET"}]}], 
+       ")"}]}]}], " ", "*)"}], "\[IndentingNewLine]", 
+   RowBox[{"(*", " ", 
+    RowBox[{"Output", ":", " ", 
+     RowBox[{
+     "event", " ", "listed", " ", "in", " ", "order", " ", "of", " ", 
+      "pT"}]}], " ", "*)"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"SortByPt", "[", "event_", "]"}], ":=", 
+    RowBox[{"Sort", "[", 
+     RowBox[{"event", ",", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"#1", "[", 
+         RowBox[{"[", "5", "]"}], "]"}], ">", 
+        RowBox[{"#2", "[", 
+         RowBox[{"[", "5", "]"}], "]"}]}], "&"}]}], "]"}]}], 
+   "\[IndentingNewLine]", "\[IndentingNewLine]", 
+   RowBox[{"(*", " ", 
+    RowBox[{"Get", " ", "list", " ", "of", " ", "jets", " ", 
+     RowBox[{"(", 
+      RowBox[{"including", " ", "tau", " ", "jets"}], ")"}]}], " ", "*)"}], 
+   "\[IndentingNewLine]", 
+   RowBox[{"(*", " ", 
+    RowBox[{"Input", ":", " ", 
+     RowBox[{"an", " ", "event", " ", 
+      RowBox[{"(", 
+       RowBox[{
+        RowBox[{"list", " ", "of", " ", "n"}], "-", 
+        RowBox[{"tuples", " ", "ending", " ", "with", " ", "MET"}]}], 
+       ")"}]}]}], " ", "*)"}], "\[IndentingNewLine]", 
+   RowBox[{"(*", " ", 
+    RowBox[{"Output", ":", " ", 
+     RowBox[{
+      RowBox[{"an", " ", "'"}], 
+      RowBox[{"event", "'"}], " ", "containing", " ", "only", " ", "jets", 
+      " ", "and", " ", "hadronically", " ", "decaying", " ", "\[Tau]s"}]}], 
+    " ", "*)"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"HadronList", "[", "event_", "]"}], " ", ":=", " ", 
+     RowBox[{"(", "\[IndentingNewLine]", 
+      RowBox[{"DeleteCases", "[", 
+       RowBox[{"event", ",", 
+        RowBox[{"Except", "[", "\[IndentingNewLine]", 
+         RowBox[{
+          RowBox[{"{", 
+           RowBox[{
+           "_", ",", "3", ",", "_", ",", "_", ",", "_", ",", "_", ",", "_", 
+            ",", "_", ",", "_", ",", "_", ",", "_"}], "}"}], "|", " ", 
+          RowBox[{"{", 
+           RowBox[{
+           "_", ",", "4", ",", "_", ",", "_", ",", "_", ",", "_", ",", "_", 
+            ",", "_", ",", "_", ",", "_", ",", "_"}], "}"}]}], "]"}]}], "]"}],
+       "\[IndentingNewLine]", ")"}]}], ";"}], "\[IndentingNewLine]", 
+   "\[IndentingNewLine]", 
+   RowBox[{"(*", " ", 
+    RowBox[{"Get", " ", "HT"}], " ", "*)"}], "\[IndentingNewLine]", 
+   RowBox[{"(*", " ", 
+    RowBox[{"Input", ":", " ", 
+     RowBox[{"an", " ", "event"}]}], " ", "*)"}], "\[IndentingNewLine]", 
+   RowBox[{"(*", " ", 
+    RowBox[{
+     RowBox[{"Output", ":", " ", 
+      RowBox[{"the", " ", "HT", " ", "for", " ", "the", " ", "event"}]}], ",",
+      " ", 
+     RowBox[{"including", " ", "hadronic", " ", "\[Tau]s"}]}], " ", "*)"}], 
+   "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"HT", "[", "event_", "]"}], ":=", 
+     RowBox[{"(", "\[IndentingNewLine]", 
+      RowBox[{"Sum", "[", 
+       RowBox[{
+        RowBox[{"Abs", "[", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"HadronList", "[", "event", "]"}], "[", 
+           RowBox[{"[", "i", "]"}], "]"}], "[", 
+          RowBox[{"[", " ", "5", "]"}], "]"}], "]"}], ",", 
+        RowBox[{"{", 
+         RowBox[{"i", ",", "1", ",", 
+          RowBox[{"Length", "[", 
+           RowBox[{"HadronList", "[", "event", "]"}], "]"}]}], "}"}]}], "]"}],
+       "\[IndentingNewLine]", ")"}]}], ";"}], "\[IndentingNewLine]", 
+   "\[IndentingNewLine]", 
+   RowBox[{"(*", " ", 
+    RowBox[{"Get", " ", "Lepton", " ", "ID"}], " ", "*)"}], 
+   "\[IndentingNewLine]", 
+   RowBox[{"(*", " ", 
+    RowBox[{"Input", ":", " ", 
+     RowBox[{
+      RowBox[{"an", " ", "n"}], "-", "tuple"}]}], " ", "*)"}], 
+   "\[IndentingNewLine]", 
+   RowBox[{"(*", " ", 
+    RowBox[{"Output", ":", " ", 
+     RowBox[{"the", " ", "lepton", " ", "id", " ", 
+      RowBox[{"(", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"+", "2"}], " ", "=", " ", "muon"}], ",", " ", 
+        RowBox[{
+         RowBox[{"-", "1"}], " ", "=", " ", "positron"}], ",", " ", 
+        RowBox[{"etc", "."}]}], ")"}]}]}], " ", "*)"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"LeptonID", "[", "ntuple_", "]"}], ":=", 
+     RowBox[{
+      RowBox[{"ntuple", "[", 
+       RowBox[{"[", "2", "]"}], "]"}], " ", 
+      RowBox[{"ntuple", "[", 
+       RowBox[{"[", "7", "]"}], "]"}]}]}], ";"}], "\[IndentingNewLine]", 
+   "\[IndentingNewLine]", 
+   RowBox[{"(*", " ", 
+    RowBox[{
+    "Get", " ", "number", " ", "of", " ", "Drell", " ", "Yan", " ", "pairs"}],
+     " ", "*)"}], "\[IndentingNewLine]", 
+   RowBox[{"(*", " ", 
+    RowBox[{"Input", ":", " ", 
+     RowBox[{"an", " ", "event"}]}], " ", "*)"}], "\[IndentingNewLine]", 
+   RowBox[{"(*", " ", 
+    RowBox[{
+     RowBox[{"Output", ":", " ", 
+      RowBox[{"number", " ", "of", " ", "OS"}]}], ",", " ", 
+     RowBox[{"SF", " ", "pairs"}]}], " ", "*)"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"DY", "[", "event_", "]"}], ":=", "\[IndentingNewLine]", 
+     RowBox[{"(", "\[IndentingNewLine]", 
+      RowBox[{"(*", " ", 
+       RowBox[{"List", " ", "of", " ", "signed", " ", "lepton", " ", "IDs"}], 
+       "*)"}], "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"IDleps", "=", 
+        RowBox[{"LeptonID", "/@", 
+         RowBox[{"LeptonList", "[", "event", "]"}]}]}], ";", 
+       "\[IndentingNewLine]", "\[IndentingNewLine]", 
+       RowBox[{"(*", " ", 
+        RowBox[{"Return", " ", "number", " ", "of", " ", "pairs"}], " ", 
+        "*)"}], "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"Min", "[", 
+         RowBox[{
+          RowBox[{"Count", "[", 
+           RowBox[{"IDleps", ",", 
+            RowBox[{"-", "1."}]}], "]"}], ",", 
+          RowBox[{"Count", "[", 
+           RowBox[{"IDleps", ",", "1."}], "]"}]}], "]"}], "+", 
+        RowBox[{"Min", "[", 
+         RowBox[{
+          RowBox[{"Count", "[", 
+           RowBox[{"IDleps", ",", 
+            RowBox[{"-", "2."}]}], "]"}], ",", 
+          RowBox[{"Count", "[", 
+           RowBox[{"IDleps", ",", "2."}], "]"}]}], "]"}]}]}], 
+      "\[IndentingNewLine]", ")"}]}], ";"}], 
+   "\[IndentingNewLine]"}]}]], "Input",
+ CellChangeTimes->CompressedData["
+1:eJwdxU8oQwEAB+DRDnNAaTZK8RAOJnmGRg0xlEkK5U+hSDKStii07cArZFvy
+v8bszZvMojigiWWIGGGjHKhd1g4cltvm/Xb4+oie4abeaA6Hk8rCootKg5Hy
+V8wXdx/gwWTJEc7pI85xoOAkaoudzIrmYp7RE4OFnkk+doh/q03sA3lTMnxT
+fNmNzza5Cuxy2MdxW9HYFH5h/iicpPAtYcHD2jpu5sk3sM6dotrG5Fvkww5i
+GvcH7nX4bfV1FzPfNTb8Q5zHmdl9TCgeu83PQmx6yc3CSVS4EN/pm0qwd+Gp
+DAc9skZM16tn8eIoqY/MZQ5wuT8ceUXReYXTePQtduxnvGNt8ucXPnLSfJp9
+6NEuwCLpVyYOluZnY5U8SOK59jQxbrhWTmLziV2NN1ziJVxlFS3jv7vYdSzR
+NJqwLbF2D4fcFhs2JOyPWNjTrY9KfHw6PoE/nFoNjqmSzmBvSx2Fu86uRTvs
+E62xRfgfm2MNXA==
+  "]]
+}, Open  ]]
+},
+WindowSize->{740, 403},
+WindowMargins->{{28, Automatic}, {36, Automatic}},
+FrontEndVersion->"8.0 for Mac OS X x86 (32-bit, 64-bit Kernel) (February 23, \
+2011)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[579, 22, 189, 2, 76, "Title"],
+Cell[771, 26, 842, 22, 116, "Text"],
+Cell[1616, 50, 93, 1, 27, "Input"],
+Cell[1712, 53, 17061, 425, 1562, "Input"]
+}, Open  ]]
+}
+]
+*)
+
+(* End of internal cache information *)
